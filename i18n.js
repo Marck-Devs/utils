@@ -93,7 +93,6 @@
                 this.console( "ERROR", "No se ha encontrado el archivo" );
                 return out;
             }
-            w.console.log( typeof file )
             var self = this;
             return fetch( this.configuration.location + file ).then( function ( res ) {
                 return res.json();
@@ -119,7 +118,7 @@
         /**
          * Carga el archivo de forma asincrona
          * @param {(currElm: number, total: number) => void} proccessCallBack  callback para monitorear el avance
-         * @returns si se ha podido cargar
+         * @returns {Promise<boolean>} si se ha podido cargar
          */
         loadAsync: function ( proccessCallBack ) {
             var self = this;
@@ -133,9 +132,15 @@
          * cambia el lenguaje actual
          * @param {String} lang lenguaje
          */
+        /*
+         * ENTRADA: lang
+         * REQUISITOS: lang tiene que pertenecer a los lenguajes disponibles
+         * MODIFICA: cambia el lenguaje actual, carga los literales y los renderiza
+         */
         setLang: function ( lang ) {
+            // guarda el lenguaje actual
             var pre = this.currLang;
-            if ( !( lang.toLowerCase() in this.avalibleLang || lang.toLowerCase() in Object.keys( this.avaliableLangMap ) ) ) {
+            if ( this.avalibleLang.indexOf( lang.toLocaleLowerCase() ) == -1 && Object.keys( this.avaliableLangMap ).indexOf( lang.toLowerCase() ) == -1 ) {
                 this.console( "WARN", "El idioma no se encuentra en los disponibles" );
                 return false;
             }
@@ -164,7 +169,6 @@
             }
         },
         /**
-         * @method
          * Establece los lenguajes que tendrá la app
          * @param {Array | Object} data array o json con los datos de los lenguajes
          * @returns {boolean} si se a podido realizar la operacion
@@ -193,10 +197,49 @@
                 return true;
             }
             return false;
+        },
+        /**
+         * Agraga una funcion a un evento, esto pueden ser varios por lo que se guradan en
+         * un mapa, por lo que las funciones de callback deberán tener nombre, no se puede
+         * meter una función anónima directamente.
+         * @param {String} event evento al que se asociará
+         * @param {(evt :any) => void } callback que se ejecutará en cada evento
+         */
+        addEventeListener: function ( event, callback ) {
+            if ( typeof callback !== "function" || !callback.hasOwnProperty( name ) || callback.name == "" ) {
+                this.console( "WARN", "Callback invalido, debe ser una función, las funciones anónimas no son validas" )
+                return false;
+            }
+            if ( !this[ event ] ) {
+                this.console( "ERROR", "El evemto no existe" );
+                return false;
+            }
+            var name = callback.name; // nombre de la función, esta sera la clave del mapa
+            if ( this[ event ] == null )
+                this[ event ] = {};
+            if ( typeof this[ event ] == "object" && !this[ event ] instanceof Array ) {
+                this[ event ][ name ] = callback;
+            }
+
         }
 
     } // end prototype
-    w.i18n = new I18n();
-    w.i18n.load();
-
+    /*
+     * El objeto inicialmente corresponde a una funcion de inzializacion y posteriormente
+     * se convierte en el objeto de internazionalizacion correspondiente
+     * ENTRADA: opciones de configuracion
+     * SALIDA: objeto i18n ya configurado
+     */
+    window.i18n = function ( options ) {
+        if ( this.window.i18n == null || typeof this.window.i18n == "function" ) {
+            this.window.i18n = new I18n( options );
+            this.window.i18n.load();
+            this.Object.defineProperty( this.window.i18n, "app", {
+                writable: this.window.i18n.configuration.writable
+            } );
+            return this.window.i18n;
+        } else {
+            return this.window.i18n;
+        }
+    };
 } )( window, document );
