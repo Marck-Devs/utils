@@ -234,9 +234,6 @@
         if ( this.window.i18n == null || typeof this.window.i18n == "function" ) {
             this.window.i18n = new I18n( options );
             this.window.i18n.load();
-            this.Object.defineProperty( this.window.i18n, "app", {
-                writable: this.window.i18n.configuration.writable
-            } );
             return this.window.i18n;
         } else {
             return this.window.i18n;
