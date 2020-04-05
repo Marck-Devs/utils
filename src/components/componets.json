@@ -1,0 +1,12 @@
+{
+    "config": {
+        "baseUrl": "/components/",
+        "folderMode": true
+    },
+    "components":[
+        {
+            "name": "test",
+            "tag": "prueba"
+        }
+    ]
+}
