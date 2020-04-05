@@ -1,9 +1,27 @@
 ( function ( w, d ) {
+    function extend( model, object ) {
+        if(!object || typeof object != "object")
+            return model;
+        var out = model;
+        for ( const key in object ) {
+            if ( out.hasOwnProperty( key ) ) {
+                const ob = object[ key ];
+                out[ key ] = ob;
+            }
+        }
+        return out;
+    }
+    /**
+     * Clase de internazionalizacion
+     * @param {Object} config 
+     */
     function I18n( config ) {
-        this.configuration = {
+        var def = {
             writable: false, // si se puede modificar el contenido
-            location: "/"
+            location: "/",
+            attr: "data-i18n" // atrributo en que buscara las claves de los literales
         };
+        this.configuration = extend(def, config);
         this.__fileTemplate = "app.i18n.%lang.json"; // nombre del archivo, template
         this.currLang = "es"; // lenguage actual
         this.avalibleLang = []; // todos los lenguajes: ["es", "en", "rus",...]
@@ -27,9 +45,6 @@
         date: "03/2020",
         version: "v0.1.0",
         license: "LICENSE",
-        settings: {
-            attr: "data-i18n"
-        },
         /**
          * Muestra un mensaje en consola
          * @param {String} grade grado del mensaje
@@ -48,13 +63,13 @@
          */
         render: function ( proccessCallBack ) {
             if ( this.loaded ) {
-                var elements = d.querySelectorAll( "[" + this.settings.attr + "]" );
+                var elements = d.querySelectorAll( "[" + this.configuration.attr + "]" );
                 for ( let i = 0; i < elements.length; i++ ) {
                     if ( proccessCallBack && typeof proccessCallBack == "function" )
                         proccessCallBack( i + 1, elements.length );
 
                     var ltm = elements[ i ];
-                    ltm.innerHTML = this.app[ ltm.getAttribute( this.settings.attr ) ];
+                    ltm.innerHTML = this.app[ ltm.getAttribute( this.configuration.attr ) ];
                 }
                 return true;
             } else {
@@ -227,6 +242,7 @@
     /*
      * El objeto inicialmente corresponde a una funcion de inzializacion y posteriormente
      * se convierte en el objeto de internazionalizacion correspondiente
+     * evitamos la existencia de mas de un objeto de la clase I18n, ya que esta no es publica
      * ENTRADA: opciones de configuracion
      * SALIDA: objeto i18n ya configurado
      */
